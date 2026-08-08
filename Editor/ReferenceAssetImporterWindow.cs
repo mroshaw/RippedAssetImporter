@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using static DaftAppleGames.Editor.ReferenceAssetImporterFileSystem;
-using static DaftAppleGames.Editor.ReferenceAssetImporterRepairs;
-namespace DaftAppleGames.Editor
+using static DaftAppleGames.Editor.RippedAssetImporter.ReferenceAssetImporterFileSystem;
+using static DaftAppleGames.Editor.RippedAssetImporter.ReferenceAssetImporterRepairs;
+
+namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     /// <summary>
     ///     Imports an AssetRipper asset dependency closure and reconnects exported scripts to game DLL types.
@@ -22,7 +23,7 @@ namespace DaftAppleGames.Editor
         private const string DefaultExportAssetsPath = "GameFiles~/ExportedProject/Assets";
         private const string DefaultDestinationPath = "Assets/SubnauticaRefAssets";
         private const string GameAssemblyPackagePath = "Packages/SubnauticaZero";
-        private const string GuidIndexCachePath = "Library/DaftAppleModTools/ReferenceAssetImporterGuidIndex.cache";
+        private const string GuidIndexCachePath = "Library/DaftAppleModTools/RippedAssetImporterGuidIndex.cache";
         private const string GuidIndexCacheVersion = "REFERENCE_ASSET_GUID_INDEX_V1";
 
         private static readonly Regex GuidRegex = new Regex(

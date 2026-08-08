@@ -1,11 +1,10 @@
-using System;
 using UnityEditor;
 using UnityEngine;
 #if ODIN_INSPECTOR
 using Sirenix.Utilities.Editor;
 #endif
 
-namespace DaftAppleGames.Editor
+namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     internal static class ReferenceAssetImporterWindowGui
     {

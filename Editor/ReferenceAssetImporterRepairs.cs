@@ -7,9 +7,9 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using static DaftAppleGames.Editor.ReferenceAssetImporterFileSystem;
+using static DaftAppleGames.Editor.RippedAssetImporter.ReferenceAssetImporterFileSystem;
 
-namespace DaftAppleGames.Editor
+namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     internal static class ReferenceAssetImporterRepairs
     {

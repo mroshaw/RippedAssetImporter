@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
 
-namespace DaftAppleGames.Editor
+namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     /// <summary>
     ///     Provides project path conversion and Windows extended-length file operations for reference imports.

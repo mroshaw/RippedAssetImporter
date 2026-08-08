@@ -1,6 +1,6 @@
 using System;
 
-namespace DaftAppleGames.Editor
+namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     /// <summary>
     ///     Computes the MD4 digest Unity uses to derive MonoScript local IDs for managed assembly types.
