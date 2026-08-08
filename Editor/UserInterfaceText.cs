@@ -20,7 +20,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         internal const string ImportOptionsGroup = "Import Options";
         internal const string ImportReportGroup = "Import Report";
 
-        internal const string ExportAssetsPathLabel = "Export Assets Root";
+        internal const string ExportAssetsPathLabel = "Ripped Assets Root";
         internal const string GameAssemblyPathLabel = "Game Assemblies Root";
         internal const string DependenciesDestinationLabel = "Dependencies Destination";
         internal const string SourceAssetPathLabel = "Source Asset";
