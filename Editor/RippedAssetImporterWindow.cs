@@ -31,9 +31,6 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         EditorWindow
 #endif
     {
-        private const string DefaultExportAssetsPath = "GameFiles~/ExportedProject/Assets";
-        private const string DefaultDestinationPath = "Assets/GameRefAssets";
-        private const string DefaultGameAssemblyPath = "Packages/SubnauticaZero";
         private const string GuidIndexCachePath = "Library/RippedAssetImporter/RippedAssetImporterGuidIndex.cache";
         private const string GuidIndexCacheVersion = "RIPPED_ASSET_GUID_INDEX_V1";
 
@@ -47,11 +44,11 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         // EditorWindow fields must be serialized for Unity to restore the tool's state with the editor layout.
         [HideInInspector, SerializeField] private string sourceAssetPath = string.Empty;
-        [HideInInspector, SerializeField] private string exportAssetsPath = DefaultExportAssetsPath;
-        [HideInInspector, SerializeField] private string gameAssemblyPath = DefaultGameAssemblyPath;
-        [HideInInspector, SerializeField] private string destinationPath = DefaultDestinationPath;
+        [HideInInspector, SerializeField] private string exportAssetsPath;
+        [HideInInspector, SerializeField] private string gameAssemblyPath;
+        [HideInInspector, SerializeField] private string destinationPath;
         [FormerlySerializedAs("selectedObjectDestinationPath")]
-        [HideInInspector, SerializeField] private string assetImportDestinationPath = DefaultDestinationPath;
+        [HideInInspector, SerializeField] private string assetImportDestinationPath;
         [HideInInspector, SerializeField] private bool forceAssetRipperReindex;
         [HideInInspector, SerializeField] private bool fixShaderExponentNotation = true;
         [HideInInspector, SerializeField] private bool repairMissingTmpAtlases = true;
