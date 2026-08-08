@@ -9,22 +9,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector.Editor;
+#endif
 using Object = UnityEngine.Object;
-using static DaftAppleGames.Editor.RippedAssetImporter.ReferenceAssetImporterFileSystem;
-using static DaftAppleGames.Editor.RippedAssetImporter.ReferenceAssetImporterRepairs;
+using static DaftAppleGames.Editor.RippedAssetImporter.FileSystemUtils;
+using static DaftAppleGames.Editor.RippedAssetImporter.AssetRepair;
 
 namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     /// <summary>
-    ///     Imports an AssetRipper asset dependency closure and reconnects exported scripts to game DLL types.
+    /// Imports an AssetRipper asset dependency closure and reconnects exported scripts to game
+    /// DLL types.
     /// </summary>
-    public class ReferenceAssetImporterWindow : EditorWindow
+    public partial class RippedAssetImporterWindow :
+#if ODIN_INSPECTOR
+        OdinEditorWindow
+#else
+        EditorWindow
+#endif
     {
         private const string DefaultExportAssetsPath = "GameFiles~/ExportedProject/Assets";
-        private const string DefaultDestinationPath = "Assets/SubnauticaRefAssets";
-        private const string GameAssemblyPackagePath = "Packages/SubnauticaZero";
-        private const string GuidIndexCachePath = "Library/DaftAppleModTools/RippedAssetImporterGuidIndex.cache";
-        private const string GuidIndexCacheVersion = "REFERENCE_ASSET_GUID_INDEX_V1";
+        private const string DefaultDestinationPath = "Assets/GameRefAssets";
+        private const string DefaultGameAssemblyPath = "Packages/SubnauticaZero";
+        private const string GuidIndexCachePath = "Library/RippedAssetImporter/RippedAssetImporterGuidIndex.cache";
+        private const string GuidIndexCacheVersion = "RIPPED_ASSET_GUID_INDEX_V1";
 
         private static readonly Regex GuidRegex = new Regex(
             @"\bguid:\s*([0-9a-fA-F]{32})\b", RegexOptions.Compiled);
@@ -34,18 +44,20 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             @"m_Script:\s*\{\s*fileID:\s*(-?\d+)\s*,\s*guid:\s*([0-9a-fA-F]{32})\s*,\s*type:\s*3\s*\}",
             RegexOptions.Compiled);
 
-        [SerializeField] private string sourceAssetPath = string.Empty;
-        [SerializeField] private string exportAssetsPath = DefaultExportAssetsPath;
-        [SerializeField] private string destinationPath = DefaultDestinationPath;
-        [SerializeField] private bool overrideSelectedObjectDestination;
-        [SerializeField] private string selectedObjectDestinationPath = DefaultDestinationPath;
-        [SerializeField] private bool forceAssetRipperReindex;
-        [SerializeField] private bool fixShaderExponentNotation = true;
-        [SerializeField] private bool repairMissingTmpAtlases = true;
-        [SerializeField] private bool reportOnly = false;
-        [SerializeField] private bool overwriteExisting = true;
-        [SerializeField] private Vector2 reportScrollPosition;
-        [SerializeField] private string report = "Select an AssetRipper asset to begin.";
+        // EditorWindow fields must be serialized for Unity to restore the tool's state with the editor layout.
+        [HideInInspector, SerializeField] private string sourceAssetPath = string.Empty;
+        [HideInInspector, SerializeField] private string exportAssetsPath = DefaultExportAssetsPath;
+        [HideInInspector, SerializeField] private string gameAssemblyPath = DefaultGameAssemblyPath;
+        [HideInInspector, SerializeField] private string destinationPath = DefaultDestinationPath;
+        [FormerlySerializedAs("selectedObjectDestinationPath")]
+        [HideInInspector, SerializeField] private string assetImportDestinationPath = DefaultDestinationPath;
+        [HideInInspector, SerializeField] private bool forceAssetRipperReindex;
+        [HideInInspector, SerializeField] private bool fixShaderExponentNotation = true;
+        [HideInInspector, SerializeField] private bool repairMissingTmpAtlases = true;
+        [HideInInspector, SerializeField] private bool reportOnly = false;
+        [HideInInspector, SerializeField] private bool overwriteExisting = true;
+        [HideInInspector, SerializeField] private Vector2 reportScrollPosition;
+        [HideInInspector, SerializeField] private string report = "Select an AssetRipper asset to begin.";
 
         private CancellationTokenSource importCancellation;
         private bool isImporting;
@@ -54,16 +66,12 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         internal string SourceAssetPath { get => sourceAssetPath; set => sourceAssetPath = value; }
         internal string ExportAssetsPath { get => exportAssetsPath; set => exportAssetsPath = value; }
+        internal string GameAssemblyPath { get => gameAssemblyPath; set => gameAssemblyPath = value; }
         internal string DestinationPath { get => destinationPath; set => destinationPath = value; }
-        internal bool OverrideSelectedObjectDestination
+        internal string AssetImportDestinationPath
         {
-            get => overrideSelectedObjectDestination;
-            set => overrideSelectedObjectDestination = value;
-        }
-        internal string SelectedObjectDestinationPath
-        {
-            get => selectedObjectDestinationPath;
-            set => selectedObjectDestinationPath = value;
+            get => assetImportDestinationPath;
+            set => assetImportDestinationPath = value;
         }
         internal bool ForceAssetRipperReindex
         {
@@ -102,18 +110,23 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             if (importCancellation != null) importCancellation.Cancel();
         }
 
+        /// <summary>
+        /// Opens and configures the reference asset importer window.
+        /// </summary>
         [MenuItem("Tools/Import Reference Asset")]
         public static void ShowWindow()
         {
-            ReferenceAssetImporterWindow window = GetWindow<ReferenceAssetImporterWindow>();
+            RippedAssetImporterWindow window = GetWindow<RippedAssetImporterWindow>();
             window.titleContent = new GUIContent("Reference Asset Importer");
             window.minSize = new Vector2(640.0f, 430.0f);
         }
 
+#if !ODIN_INSPECTOR
         private void OnGUI()
         {
-            ReferenceAssetImporterWindowGui.Draw(this);
+            UserInterfaceUtils.Draw(this);
         }
+#endif
 
         private async void ImportSelectedAssetAsync()
         {
@@ -123,8 +136,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             string absoluteExportRoot = NormalizeFullPath(GetAbsolutePath(exportAssetsPath));
             string absoluteSourcePath = NormalizeFullPath(sourceAssetPath);
             string normalizedDestination = destinationPath.Replace('\\', '/').TrimEnd('/');
-            string normalizedSelectedObjectDestination =
-                selectedObjectDestinationPath.Replace('\\', '/').TrimEnd('/');
+            string normalizedAssetImportDestination =
+                assetImportDestinationPath.Replace('\\', '/').TrimEnd('/');
             string absoluteGuidIndexCachePath = GetAbsolutePath(GuidIndexCachePath);
 
             if (!Directory.Exists(absoluteExportRoot))
@@ -157,10 +170,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 return;
             }
 
-            if (overrideSelectedObjectDestination &&
-                !IsValidProjectDestination(normalizedSelectedObjectDestination))
+            if (!IsValidProjectDestination(normalizedAssetImportDestination))
             {
-                report = "Selected Object Destination must be a project-relative path under Assets.";
+                report = "Asset Import Destination must be a project-relative path under Assets.";
                 return;
             }
 
@@ -184,7 +196,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 cancellationToken.ThrowIfCancellationRequested();
                 SetImportProgress(0.55f, "Indexing ThunderKit game scripts...");
                 await Task.Yield();
-                Dictionary<string, MonoScript> gameScriptsByType = BuildGameScriptIndex(reportBuilder);
+                Dictionary<string, MonoScript> gameScriptsByType =
+                    BuildGameScriptIndex(gameAssemblyPath, reportBuilder);
 
                 cancellationToken.ThrowIfCancellationRequested();
                 SetImportProgress(0.65f, "Resolving game script references...");
@@ -197,7 +210,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 HashSet<string> tmpFontAssetsToRepair =
                     new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 int copiedCount = await CopyAssetsAsync(absoluteExportRoot, absoluteSourcePath,
-                    normalizedDestination, normalizedSelectedObjectDestination, sourceAssets, scriptReferences,
+                    normalizedDestination, normalizedAssetImportDestination, sourceAssets, scriptReferences,
                     managedAssemblyScriptReferences, tmpFontAssetsToRepair, reportBuilder, progress,
                     cancellationToken);
 
@@ -212,10 +225,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                         RepairMissingTmpFontAtlases(tmpFontAssetsToRepair, reportBuilder);
                     }
 
-                    string rootRelativePath = GetRelativePath(absoluteExportRoot, absoluteSourcePath);
-                    string importedRootPath = overrideSelectedObjectDestination
-                        ? CombineAssetPath(normalizedSelectedObjectDestination, Path.GetFileName(absoluteSourcePath))
-                        : CombineAssetPath(normalizedDestination, rootRelativePath.Replace('\\', '/'));
+                    string importedRootPath = CombineAssetPath(
+                        normalizedAssetImportDestination, Path.GetFileName(absoluteSourcePath));
                     Object importedAsset = AssetDatabase.LoadMainAssetAtPath(importedRootPath);
                     if (importedAsset) EditorGUIUtility.PingObject(importedAsset);
                 }
@@ -392,11 +403,12 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             }
         }
 
-        private static Dictionary<string, MonoScript> BuildGameScriptIndex(StringBuilder reportBuilder)
+        private static Dictionary<string, MonoScript> BuildGameScriptIndex(string assemblyFolderPath,
+            StringBuilder reportBuilder)
         {
             Dictionary<string, MonoScript> scriptsByType =
                 new Dictionary<string, MonoScript>(StringComparer.Ordinal);
-            string absoluteAssemblyFolder = GetAbsolutePath(GameAssemblyPackagePath);
+            string absoluteAssemblyFolder = GetAbsolutePath(assemblyFolderPath);
             if (!Directory.Exists(absoluteAssemblyFolder))
                 throw new DirectoryNotFoundException($"Game assembly package was not found: {absoluteAssemblyFolder}");
 
@@ -449,6 +461,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 FindReferencedAssets(
                     assetPath, assetsByGuid, pendingAssets, scriptGuids, managedScriptReferences);
                 string metaPath = assetPath + ".meta";
+                // Importer settings in .meta files can reference assets that the serialized asset itself does not.
                 if (FileExists(metaPath))
                     FindReferencedAssets(
                         metaPath, assetsByGuid, pendingAssets, scriptGuids, managedScriptReferences);
@@ -470,6 +483,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 string referencedPath;
                 if (!assetsByGuid.TryGetValue(guid, out referencedPath)) continue;
 
+                // Ripped scripts and assemblies are reference sources, not assets to copy into the mod project.
                 if (referencedPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
                     scriptGuids.Add(guid);
                 else if (IsManagedAssemblyArtifact(referencedPath))
@@ -689,14 +703,15 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         private static long ComputeManagedScriptLocalId(Type scriptType)
         {
+            // Unity identifies a type inside a managed assembly with the first four bytes of this MD4 hash.
             string hashInput = "s\0\0\0" + (scriptType.Namespace ?? string.Empty) + scriptType.Name;
-            byte[] hash = ReferenceAssetImporterMd4.ComputeHash(Encoding.UTF8.GetBytes(hashInput));
+            byte[] hash = Md4Utils.ComputeHash(Encoding.UTF8.GetBytes(hashInput));
             uint unsignedValue = (uint)(hash[0] | hash[1] << 8 | hash[2] << 16 | hash[3] << 24);
             return unchecked((int)unsignedValue);
         }
 
         private async Task<int> CopyAssetsAsync(string exportRoot, string selectedSourcePath, string projectDestination,
-            string selectedObjectDestination, HashSet<string> sourceAssets,
+            string assetImportDestination, HashSet<string> sourceAssets,
             Dictionary<string, string> scriptReferences,
             Dictionary<ManagedScriptReference, string> managedAssemblyScriptReferences,
             HashSet<string> tmpFontAssetsToRepair, StringBuilder reportBuilder,
@@ -721,6 +736,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 if (!string.IsNullOrEmpty(existingAssetPath) &&
                     !FileExists(GetAbsolutePath(existingAssetPath)))
                 {
+                    // Unity can retain a GUID-to-path mapping briefly after an asset has been removed or moved.
                     reportBuilder.AppendLine(
                         $"IGNORED STALE GUID PATH: {sourceGuid} -> {existingAssetPath}");
                     existingAssetPath = string.Empty;
@@ -729,13 +745,14 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 string relativePath = GetRelativePath(exportRoot, sourcePath).Replace('\\', '/');
                 bool isSelectedAsset = string.Equals(
                     sourcePath, selectedSourcePath, StringComparison.OrdinalIgnoreCase);
-                string destinationAssetPath = overrideSelectedObjectDestination && isSelectedAsset
-                    ? CombineAssetPath(selectedObjectDestination, Path.GetFileName(sourcePath))
+                string destinationAssetPath = isSelectedAsset
+                    ? CombineAssetPath(assetImportDestination, Path.GetFileName(sourcePath))
                     : CombineAssetPath(projectDestination, relativePath);
                 bool guidExistsAtAnotherPath = !string.IsNullOrEmpty(existingAssetPath) &&
                     !string.Equals(existingAssetPath, destinationAssetPath, StringComparison.OrdinalIgnoreCase);
-                bool copySelectedAssetWithNewGuid = guidExistsAtAnotherPath &&
-                    overrideSelectedObjectDestination && isSelectedAsset;
+                // Only the explicitly selected asset may be duplicated; dependencies must retain identity so
+                // existing project references continue to converge on the same asset.
+                bool copySelectedAssetWithNewGuid = guidExistsAtAnotherPath && isSelectedAsset;
                 if (repairMissingTmpAtlases && IsDynamicTmpFontAsset(sourcePath))
                 {
                     string fontAssetPath = guidExistsAtAnotherPath && !copySelectedAssetWithNewGuid
@@ -812,6 +829,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                             CopyFile(sourcePath, absoluteDestinationPath);
                         }
 
+                        // Omitting the source meta makes Unity assign the intentionally duplicated root a new GUID.
                         if (!copySelectedAssetWithNewGuid && FileExists(sourceMetaPath))
                             CopyFile(sourceMetaPath, absoluteDestinationPath + ".meta");
 
@@ -829,6 +847,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                     $"{(reportOnly ? "Planning" : "Copying")} assets ({processedCount}/{sourceAssets.Count})..."));
                 if (processedCount % 10 == 0)
                 {
+                    // Return to the editor periodically so the window repaints and cancellation remains responsive.
                     Repaint();
                     await Task.Yield();
                 }
@@ -933,6 +952,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             public readonly HashSet<string> ScriptGuids;
             public readonly HashSet<string> SourceAssets;
 
+            /// <summary>
+            /// Captures the dependency-index data and report produced for an import.
+            /// </summary>
             public IndexResult(Dictionary<string, string> assetsByGuid, HashSet<string> sourceAssets,
                 HashSet<string> scriptGuids, HashSet<ManagedScriptReference> managedScriptReferences,
                 string report)
@@ -950,23 +972,35 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             public readonly string Guid;
             public readonly long LocalId;
 
+            /// <summary>
+            /// Creates a reference to a managed script stored within an assembly asset.
+            /// </summary>
             public ManagedScriptReference(string guid, long localId)
             {
                 Guid = guid;
                 LocalId = localId;
             }
 
+            /// <summary>
+            /// Determines whether this reference identifies the same managed script.
+            /// </summary>
             public bool Equals(ManagedScriptReference other)
             {
                 return LocalId == other.LocalId &&
                        string.Equals(Guid, other.Guid, StringComparison.OrdinalIgnoreCase);
             }
 
+            /// <summary>
+            /// Determines whether an object represents the same managed script reference.
+            /// </summary>
             public override bool Equals(object obj)
             {
                 return obj is ManagedScriptReference && Equals((ManagedScriptReference)obj);
             }
 
+            /// <summary>
+            /// Returns a case-insensitive hash code for the managed script reference.
+            /// </summary>
             public override int GetHashCode()
             {
                 unchecked
@@ -982,6 +1016,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             public readonly string Status;
             public readonly float Value;
 
+            /// <summary>
+            /// Creates an import progress update for the editor window.
+            /// </summary>
             public ImportProgress(float value, string status)
             {
                 Value = value;

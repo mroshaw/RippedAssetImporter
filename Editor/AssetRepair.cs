@@ -7,16 +7,19 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using static DaftAppleGames.Editor.RippedAssetImporter.ReferenceAssetImporterFileSystem;
+using static DaftAppleGames.Editor.RippedAssetImporter.FileSystemUtils;
 
 namespace DaftAppleGames.Editor.RippedAssetImporter
 {
-    internal static class ReferenceAssetImporterRepairs
+    internal static class AssetRepair
     {
         private static readonly Regex ShaderExponentRegex = new Regex(
             @"(?<![A-Za-z0-9_.])[+-]?(?:\d+(?:\.\d*)?|\.\d+)[eE][+-]?\d+(?![A-Za-z0-9_.])",
             RegexOptions.Compiled);
 
+        /// <summary>
+        /// Restores missing atlas sub-assets required by imported dynamic TextMeshPro fonts.
+        /// </summary>
         public static void RepairMissingTmpFontAtlases(HashSet<string> fontAssetPaths,
             StringBuilder reportBuilder)
         {
@@ -32,7 +35,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 SerializedProperty populationMode = serializedFontAsset.FindProperty("m_AtlasPopulationMode");
                 SerializedProperty atlasTextures = serializedFontAsset.FindProperty("m_AtlasTextures");
                 if (populationMode is null || populationMode.intValue != 1 || atlasTextures is null) continue;
-                if (atlasTextures.arraySize > 0 && atlasTextures.GetArrayElementAtIndex(0).objectReferenceValue) continue;
+                if (atlasTextures.arraySize > 0 &&
+                    atlasTextures.GetArrayElementAtIndex(0).objectReferenceValue) continue;
 
                 SerializedProperty sourceFontFile = serializedFontAsset.FindProperty("m_SourceFontFile");
                 if (sourceFontFile is null || !sourceFontFile.objectReferenceValue)
@@ -46,6 +50,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 Texture2D atlasTexture = FindAtlasTextureSubAsset(fontAssetPath);
                 if (!atlasTexture)
                 {
+                    // AssetRipper can omit the initially blank atlas sub-asset used by dynamic TMP fonts.
                     atlasTexture = new Texture2D(atlasWidth, atlasHeight, TextureFormat.Alpha8, false, true)
                     {
                         name = fontAsset.name + " Atlas",
@@ -74,7 +79,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 {
                     fontMaterial.mainTexture = atlasTexture;
                     if (fontMaterial.HasProperty("_TextureWidth")) fontMaterial.SetFloat("_TextureWidth", atlasWidth);
-                    if (fontMaterial.HasProperty("_TextureHeight")) fontMaterial.SetFloat("_TextureHeight", atlasHeight);
+                    if (fontMaterial.HasProperty("_TextureHeight"))
+                        fontMaterial.SetFloat("_TextureHeight", atlasHeight);
                     EditorUtility.SetDirty(fontMaterial);
                 }
 
@@ -88,6 +94,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 AssetDatabase.ImportAsset(repairedAssetPaths[assetIndex], ImportAssetOptions.ForceUpdate);
         }
 
+        /// <summary>
+        /// Determines whether a serialized asset appears to be a dynamic TextMeshPro font.
+        /// </summary>
         public static bool IsDynamicTmpFontAsset(string path)
         {
             if (!string.Equals(Path.GetExtension(path), ".asset", StringComparison.OrdinalIgnoreCase)) return false;
@@ -97,6 +106,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                    contents.IndexOf("m_SourceFontFile:", StringComparison.Ordinal) >= 0;
         }
 
+        /// <summary>
+        /// Repairs unsupported exponent notation in a shader file when requested.
+        /// </summary>
         public static int FixShaderFile(string path, bool writeChanges)
         {
             if (!FileExists(path)) return 0;
@@ -107,6 +119,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             return replacementCount;
         }
 
+        /// <summary>
+        /// Counts shader exponent values that require conversion.
+        /// </summary>
         public static int CountShaderExponentReplacements(string contents)
         {
             int replacementCount;
@@ -114,6 +129,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             return replacementCount;
         }
 
+        /// <summary>
+        /// Determines whether a path identifies a shader source asset.
+        /// </summary>
         public static bool IsShaderAsset(string path)
         {
             return string.Equals(Path.GetExtension(path), ".shader", StringComparison.OrdinalIgnoreCase);
@@ -134,12 +152,17 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 Texture2D texture = assets[assetIndex] as Texture2D;
                 if (texture) return texture;
             }
+
             return null;
         }
 
+        /// <summary>
+        /// Converts scientific-notation shader values to decimal notation accepted by Unity.
+        /// </summary>
         public static string FixShaderExponentNotation(string contents, out int replacementCount)
         {
             int convertedCount = 0;
+            // Some Unity shader importers reject AssetRipper's scientific notation even though the value is valid.
             string fixedContents = ShaderExponentRegex.Replace(contents, match =>
             {
                 decimal value;

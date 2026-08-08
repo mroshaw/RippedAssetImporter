@@ -3,12 +3,19 @@ using System;
 namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     /// <summary>
-    ///     Computes the MD4 digest Unity uses to derive MonoScript local IDs for managed assembly types.
+    /// Computes the MD4 digest Unity uses to derive MonoScript local IDs for managed assembly
+    /// types.
+    /// MD4 is implemented locally because Unity's supported .NET profile does not provide it.
     /// </summary>
-    internal static class ReferenceAssetImporterMd4
+    internal static class Md4Utils
     {
+        /// <summary>
+        /// Computes the 128-bit MD4 digest required by Unity's managed-type identifier algorithm.
+        /// </summary>
         public static byte[] ComputeHash(byte[] input)
         {
+            // MD4 operates on 64-byte blocks. Its padding is a one bit, enough zero bits to leave
+            // eight bytes at the end of the final block, then the original bit length.
             int paddedLength = ((input.Length + 8) / 64 + 1) * 64;
             byte[] paddedInput = new byte[paddedLength];
             Buffer.BlockCopy(input, 0, paddedInput, 0, input.Length);
@@ -17,6 +24,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             for (int byteIndex = 0; byteIndex < 8; byteIndex++)
                 paddedInput[paddedLength - 8 + byteIndex] = (byte)(bitLength >> byteIndex * 8);
 
+            // A-D are the four state words named by the MD4 specification. Keeping those names makes
+            // the round schedule below directly comparable with published implementations and test vectors.
             uint a = 0x67452301;
             uint b = 0xefcdab89;
             uint c = 0x98badcfe;
@@ -34,6 +43,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
                 ApplyRounds(ref a, ref b, ref c, ref d, words);
 
+                // Feed this block's result back into the running state so later blocks depend on it.
                 unchecked
                 {
                     a += originalA;
@@ -53,6 +63,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         private static void ApplyRounds(ref uint a, ref uint b, ref uint c, ref uint d, uint[] words)
         {
+            // Each round visits all 16 words with a different Boolean mixing function, word order,
+            // and rotation schedule. These values are fixed by MD4 rather than chosen by this tool.
+            // Round 1 mixes adjacent input words using the choose function.
             Round1(ref a, b, c, d, words[0], 3);
             Round1(ref d, a, b, c, words[1], 7);
             Round1(ref c, d, a, b, words[2], 11);
@@ -70,6 +83,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             Round1(ref c, d, a, b, words[14], 11);
             Round1(ref b, c, d, a, words[15], 19);
 
+            // Round 2 uses the majority function and visits the words by columns.
             Round2(ref a, b, c, d, words[0], 3);
             Round2(ref d, a, b, c, words[4], 5);
             Round2(ref c, d, a, b, words[8], 9);
@@ -87,6 +101,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             Round2(ref c, d, a, b, words[11], 9);
             Round2(ref b, c, d, a, words[15], 13);
 
+            // Round 3 uses XOR and a final permutation of the input words.
             Round3(ref a, b, c, d, words[0], 3);
             Round3(ref d, a, b, c, words[8], 9);
             Round3(ref c, d, a, b, words[4], 11);
@@ -107,6 +122,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         private static void ReadWords(byte[] input, int blockOffset, uint[] words)
         {
+            // MD4 interprets each group of four input bytes as a little-endian 32-bit word.
             for (int wordIndex = 0; wordIndex < words.Length; wordIndex++)
             {
                 int offset = blockOffset + wordIndex * 4;
