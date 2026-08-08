@@ -2,9 +2,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     internal static class UserInterfaceText
     {
-        internal const string MenuPath = "Tools/Import Reference Asset";
-        internal const string WindowTitle = "Reference Asset Importer";
-        internal const string MainTitle = "AssetRipper Reference Asset Importer";
+        internal const string MenuPath = "Tools/Import Ripped Asset";
+        internal const string WindowTitle = "Ripped Asset Importer";
+        internal const string MainTitle = "Ripped Asset Importer";
         internal const string MainSubtitle = "Import an asset and its recursive dependency closure";
         internal const string Introduction =
             "Copies the selected asset and its recursive dependencies while preserving AssetRipper GUIDs. " +

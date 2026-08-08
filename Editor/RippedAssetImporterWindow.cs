@@ -112,7 +112,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         /// <summary>
-        /// Opens and configures the reference asset importer window.
+        /// Opens and configures the Ripped Asset Importer window.
         /// </summary>
         [MenuItem(MenuPath)]
         public static void ShowWindow()
