@@ -33,8 +33,8 @@ The interface is divided into three working sections:
 ## Using the Tool
 
 1. Open **Tools > Import Reference Asset**.
-2. Set **Export Assets Root** to the `Assets` directory of the AssetRipper export. The default is `GameFiles~/ExportedProject/Assets`.
-3. Set **Game Assemblies Root** to a project-relative folder containing the imported game DLLs. The default is `Packages/SubnauticaZero`, but this path is configurable so the importer can be used with other Unity games and project layouts.
+2. Set **Export Assets Root** to the `Assets` directory of the AssetRipper export.
+3. Set **Game Assemblies Root** to a project-relative folder containing the imported game DLLs. This configurable path allows the importer to be used with different Unity games and project layouts.
 4. Set **Dependencies Destination** to a project-relative folder beneath `Assets`. Dependencies are copied beneath this folder while retaining their paths relative to the export root.
 5. Use **Source Asset** to select the asset to import. Select the asset itself, not its `.meta` file. When no source is selected, the file picker opens at **Export Assets Root**; otherwise it opens beside the currently selected file.
 6. Set **Asset Import Destination** to the project-relative folder beneath `Assets` where the selected asset should be placed. The asset is written directly into this folder using its original filename.

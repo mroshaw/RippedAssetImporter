@@ -89,7 +89,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
                 return;
             }
 
-            using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(window.SourceAssetPath)))
+            using (new EditorGUI.DisabledScope(!window.CanBeginImport))
             {
                 if (GUILayout.Button(
                         new GUIContent(ImportButtonLabel, ImportButtonTooltip),

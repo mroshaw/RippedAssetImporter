@@ -44,11 +44,11 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         // EditorWindow fields must be serialized for Unity to restore the tool's state with the editor layout.
         [HideInInspector, SerializeField] private string sourceAssetPath = string.Empty;
-        [HideInInspector, SerializeField] private string exportAssetsPath;
-        [HideInInspector, SerializeField] private string gameAssemblyPath;
-        [HideInInspector, SerializeField] private string destinationPath;
+        [HideInInspector, SerializeField] private string exportAssetsPath = string.Empty;
+        [HideInInspector, SerializeField] private string gameAssemblyPath = string.Empty;
+        [HideInInspector, SerializeField] private string destinationPath = string.Empty;
         [FormerlySerializedAs("selectedObjectDestinationPath")]
-        [HideInInspector, SerializeField] private string assetImportDestinationPath;
+        [HideInInspector, SerializeField] private string assetImportDestinationPath = string.Empty;
         [HideInInspector, SerializeField] private bool forceAssetRipperReindex;
         [HideInInspector, SerializeField] private bool fixShaderExponentNotation = true;
         [HideInInspector, SerializeField] private bool repairMissingTmpAtlases = true;
@@ -97,6 +97,13 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         internal bool IsImporting => isImporting;
         internal float ProgressValue => importProgress;
         internal string ImportStatus => importStatus;
+        internal bool AreAllPathPropertiesPopulated =>
+            !string.IsNullOrWhiteSpace(exportAssetsPath) &&
+            !string.IsNullOrWhiteSpace(gameAssemblyPath) &&
+            !string.IsNullOrWhiteSpace(destinationPath) &&
+            !string.IsNullOrWhiteSpace(sourceAssetPath) &&
+            !string.IsNullOrWhiteSpace(assetImportDestinationPath);
+        internal bool CanBeginImport => !isImporting && AreAllPathPropertiesPopulated;
 
         internal void BeginImport()
         {
@@ -131,6 +138,36 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             if (isImporting) return;
 
             StringBuilder reportBuilder = new StringBuilder();
+            if (string.IsNullOrWhiteSpace(exportAssetsPath))
+            {
+                report = "Select an Export Assets Root.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(gameAssemblyPath))
+            {
+                report = "Select a Game Assemblies Root.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(destinationPath))
+            {
+                report = "Select a Dependencies Destination.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(sourceAssetPath))
+            {
+                report = "Select a Source Asset.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(assetImportDestinationPath))
+            {
+                report = "Select an Asset Import Destination.";
+                return;
+            }
+
             string absoluteExportRoot = NormalizeFullPath(GetAbsolutePath(exportAssetsPath));
             string absoluteSourcePath = NormalizeFullPath(sourceAssetPath);
             string normalizedDestination = destinationPath.Replace('\\', '/').TrimEnd('/');

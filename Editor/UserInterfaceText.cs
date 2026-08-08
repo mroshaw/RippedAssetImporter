@@ -36,7 +36,9 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         internal const string ImportStatusLabel = "Status";
         internal const string BrowseButtonLabel = "Browse";
         internal const string SourceAssetDialogTitle = "Select AssetRipper asset";
-
+        internal const string FolderPathDoesNotExistMessage = "Please select a valid folder.";
+        internal const string AssetPathDoesNotExistMessage = "Please select a valid asset file.";
+        
         internal const string ExportAssetsPathTooltip =
             "Root Assets folder of the Unity project exported by AssetRipper.";
         internal const string GameAssemblyPathTooltip =

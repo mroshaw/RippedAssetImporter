@@ -1,4 +1,5 @@
 #if ODIN_INSPECTOR && !DEBUG_NO_ODIN_INSPECTOR
+using System.IO;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using static DaftAppleGames.Editor.RippedAssetImporter.UserInterfaceText;
@@ -10,7 +11,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         [Title(MainTitle, MainSubtitle)]
         [TitleGroup(ReferencePathsGroup, ReferencePathsDescription)]
         [InfoBox(Introduction)]
-        [FolderPath(AbsolutePath = true, RequireExistingPath = true)]
+        [FolderPath(AbsolutePath = true)]
+        [ValidateInput(nameof(IsExistingFolderPath), FolderPathDoesNotExistMessage)]
         [LabelText(ExportAssetsPathLabel)]
         [PropertyTooltip(ExportAssetsPathTooltip)]
         [DisableIf(nameof(IsImporting))]
@@ -23,7 +25,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         [TitleGroup(ReferencePathsGroup)]
-        [FolderPath(RequireExistingPath = true)]
+        [FolderPath]
+        [ValidateInput(nameof(IsExistingFolderPath), FolderPathDoesNotExistMessage)]
         [LabelText(GameAssemblyPathLabel)]
         [PropertyTooltip(GameAssemblyPathTooltip)]
         [DisableIf(nameof(IsImporting))]
@@ -37,6 +40,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [TitleGroup(ReferencePathsGroup)]
         [FolderPath]
+        [ValidateInput(nameof(IsExistingFolderPath), FolderPathDoesNotExistMessage)]
         [LabelText(DependenciesDestinationLabel)]
         [PropertyTooltip(DependenciesDestinationTooltip)]
         [DisableIf(nameof(IsImporting))]
@@ -50,7 +54,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [TitleGroup(AssetImportGroup, AssetImportDescription)]
         [FilePath(ParentFolder = "$" + nameof(OdinSourceAssetPickerRoot), AbsolutePath = true,
-            RequireExistingPath = true)]
+            RequireExistingPath = false)]
+        [ValidateInput(nameof(IsExistingFilePath), AssetPathDoesNotExistMessage)]
         [LabelText(SourceAssetPathLabel)]
         [PropertyTooltip(SourceAssetPathTooltip)]
         [DisableIf(nameof(IsImporting))]
@@ -64,6 +69,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [TitleGroup(AssetImportGroup)]
         [FolderPath]
+        [ValidateInput(nameof(IsExistingFolderPath), FolderPathDoesNotExistMessage)]
         [LabelText(AssetImportDestinationLabel)]
         [PropertyTooltip(AssetImportDestinationTooltip)]
         [DisableIf(nameof(IsImporting))]
@@ -142,7 +148,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [Button(ImportButtonLabel, ButtonSizes.Large)]
         [PropertyTooltip(ImportButtonTooltip)]
-        [EnableIf(nameof(CanBeginImport))]
+        [EnableIf(nameof(AreAllPathPropertiesPopulated))]
         [HideIf(nameof(IsImporting))]
         [PropertyOrder(30)]
         private void DrawImportButton()
@@ -184,9 +190,19 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         [PropertyOrder(40)]
         private string OdinReport => report;
 
-        private bool CanBeginImport => !isImporting && !string.IsNullOrWhiteSpace(sourceAssetPath);
-
         private string OdinSourceAssetPickerRoot => FileSystemUtils.GetAbsolutePath(exportAssetsPath);
+
+        private bool IsExistingFolderPath(string path)
+        {
+            return !string.IsNullOrWhiteSpace(path) &&
+                   Directory.Exists(FileSystemUtils.GetAbsolutePath(path));
+        }
+
+        private bool IsExistingFilePath(string path)
+        {
+            return !string.IsNullOrWhiteSpace(path) &&
+                   FileSystemUtils.FileExists(FileSystemUtils.GetAbsolutePath(path));
+        }
     }
 }
 #endif

@@ -78,13 +78,16 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         /// <summary>
-        /// Resolves a project-relative or absolute path to a normalized absolute path.
+        /// Resolves a project-relative or absolute path to a normalized absolute path. An empty
+        /// path resolves to the Unity project root so file and folder pickers always have a safe
+        /// initial location.
         /// </summary>
         public static string GetAbsolutePath(string path)
         {
+            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            if (string.IsNullOrWhiteSpace(path)) return NormalizeFullPath(projectRoot);
             if (Path.IsPathRooted(path)) return NormalizeFullPath(path);
 
-            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
             return NormalizeFullPath(Path.Combine(projectRoot, path));
         }
 
