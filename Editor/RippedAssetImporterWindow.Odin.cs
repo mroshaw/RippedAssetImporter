@@ -1,21 +1,18 @@
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 using UnityEngine;
+using static DaftAppleGames.Editor.RippedAssetImporter.UserInterfaceText;
 
 namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     public partial class RippedAssetImporterWindow
     {
-        private const string ReferencePathsGroup = "Reference Paths";
-        private const string AssetImportGroup = "Asset Import";
-        private const string ImportOptionsGroup = "Import Options";
-        private const string ImportReportGroup = "Import Report";
-
-        [TitleGroup(ReferencePathsGroup, "Paths normally configured once for the current game project.")]
-        [InfoBox("Copies the selected asset and its recursive dependencies while preserving AssetRipper GUIDs. " +
-                 "Exported scripts are remapped to MonoScript types in the imported game assemblies.")]
+        [Title(MainTitle, MainSubtitle)]
+        [TitleGroup(ReferencePathsGroup, ReferencePathsDescription)]
+        [InfoBox(Introduction)]
         [FolderPath(AbsolutePath = true, RequireExistingPath = true)]
-        [LabelText("Export Assets Root")]
+        [LabelText(ExportAssetsPathLabel)]
+        [PropertyTooltip(ExportAssetsPathTooltip)]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
         [PropertyOrder(0)]
@@ -27,7 +24,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [TitleGroup(ReferencePathsGroup)]
         [FolderPath(RequireExistingPath = true)]
-        [LabelText("Game Assemblies Root")]
+        [LabelText(GameAssemblyPathLabel)]
+        [PropertyTooltip(GameAssemblyPathTooltip)]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
         [PropertyOrder(1)]
@@ -39,7 +37,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [TitleGroup(ReferencePathsGroup)]
         [FolderPath]
-        [LabelText("Dependencies Destination")]
+        [LabelText(DependenciesDestinationLabel)]
+        [PropertyTooltip(DependenciesDestinationTooltip)]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
         [PropertyOrder(2)]
@@ -49,9 +48,11 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             set => destinationPath = value;
         }
 
-        [TitleGroup(AssetImportGroup, "Select the asset to import and where its root copy should be placed.")]
-        [FilePath(AbsolutePath = true, RequireExistingPath = true)]
-        [LabelText("Source Asset")]
+        [TitleGroup(AssetImportGroup, AssetImportDescription)]
+        [FilePath(ParentFolder = "$" + nameof(OdinSourceAssetPickerRoot), AbsolutePath = true,
+            RequireExistingPath = true)]
+        [LabelText(SourceAssetPathLabel)]
+        [PropertyTooltip(SourceAssetPathTooltip)]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
         [PropertyOrder(10)]
@@ -63,7 +64,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [TitleGroup(AssetImportGroup)]
         [FolderPath]
-        [LabelText("Asset Import Destination")]
+        [LabelText(AssetImportDestinationLabel)]
+        [PropertyTooltip(AssetImportDestinationTooltip)]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
         [PropertyOrder(11)]
@@ -74,7 +76,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         [TitleGroup(ImportOptionsGroup)]
-        [LabelText("Force AssetRipper Re-index")]
+        [LabelText(ForceReindexLabel)]
+        [PropertyTooltip(ForceReindexTooltip)]
         [ToggleLeft]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
@@ -86,7 +89,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         [TitleGroup(ImportOptionsGroup)]
-        [LabelText("Fix Shader E Notation")]
+        [LabelText(FixShaderExponentLabel)]
+        [PropertyTooltip(FixShaderExponentTooltip)]
         [ToggleLeft]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
@@ -98,7 +102,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         [TitleGroup(ImportOptionsGroup)]
-        [LabelText("Repair Missing TMP Atlases")]
+        [LabelText(RepairTmpAtlasesLabel)]
+        [PropertyTooltip(RepairTmpAtlasesTooltip)]
         [ToggleLeft]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
@@ -110,7 +115,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         [TitleGroup(ImportOptionsGroup)]
-        [LabelText("Report Only")]
+        [LabelText(ReportOnlyLabel)]
+        [PropertyTooltip(ReportOnlyTooltip)]
         [ToggleLeft]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
@@ -122,7 +128,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         [TitleGroup(ImportOptionsGroup)]
-        [LabelText("Overwrite Existing")]
+        [LabelText(OverwriteExistingLabel)]
+        [PropertyTooltip(OverwriteExistingTooltip)]
         [ToggleLeft]
         [DisableIf(nameof(IsImporting))]
         [ShowInInspector]
@@ -133,7 +140,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             set => overwriteExisting = value;
         }
 
-        [Button("Import Asset and Dependencies", ButtonSizes.Large)]
+        [Button(ImportButtonLabel, ButtonSizes.Large)]
+        [PropertyTooltip(ImportButtonTooltip)]
         [EnableIf(nameof(CanBeginImport))]
         [HideIf(nameof(IsImporting))]
         [PropertyOrder(30)]
@@ -142,7 +150,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             BeginImport();
         }
 
-        [Button("Cancel Import", ButtonSizes.Large)]
+        [Button(CancelButtonLabel, ButtonSizes.Large)]
+        [PropertyTooltip(CancelButtonTooltip)]
         [ShowIf(nameof(IsImporting))]
         [PropertyOrder(31)]
         private void DrawCancelButton()
@@ -152,14 +161,16 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         [ShowIf(nameof(IsImporting))]
         [ProgressBar(0.0, 1.0)]
-        [LabelText("Import Progress")]
+        [LabelText(ImportProgressLabel)]
+        [PropertyTooltip(ImportProgressTooltip)]
         [ShowInInspector]
         [PropertyOrder(32)]
         private float OdinImportProgress => importProgress;
 
         [ShowIf(nameof(IsImporting))]
         [DisplayAsString]
-        [LabelText("Status")]
+        [LabelText(ImportStatusLabel)]
+        [PropertyTooltip(ImportStatusTooltip)]
         [ShowInInspector]
         [PropertyOrder(33)]
         private string OdinImportStatus => importStatus;
@@ -168,11 +179,14 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         [MultiLineProperty(12)]
         [ReadOnly]
         [HideLabel]
+        [PropertyTooltip(ImportReportTooltip)]
         [ShowInInspector]
         [PropertyOrder(40)]
         private string OdinReport => report;
 
         private bool CanBeginImport => !isImporting && !string.IsNullOrWhiteSpace(sourceAssetPath);
+
+        private string OdinSourceAssetPickerRoot => FileSystemUtils.GetAbsolutePath(exportAssetsPath);
     }
 }
 #endif

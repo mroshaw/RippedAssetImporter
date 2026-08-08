@@ -1,6 +1,7 @@
 #if !ODIN_INSPECTOR
 using UnityEditor;
 using UnityEngine;
+using static DaftAppleGames.Editor.RippedAssetImporter.UserInterfaceText;
 
 namespace DaftAppleGames.Editor.RippedAssetImporter
 {
@@ -19,35 +20,41 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
             using (new EditorGUI.DisabledScope(window.IsImporting))
             {
-                DrawSectionHeading("Reference Paths");
+                DrawSectionHeading(ReferencePathsGroup);
                 string exportAssetsPath = window.ExportAssetsPath;
-                DrawPathField("Export Assets Root", ref exportAssetsPath, true);
+                DrawPathField(ExportAssetsPathLabel, ExportAssetsPathTooltip, ref exportAssetsPath, true);
                 window.ExportAssetsPath = exportAssetsPath;
 
                 string gameAssemblyPath = window.GameAssemblyPath;
-                DrawPathField("Game Assemblies Root", ref gameAssemblyPath, false);
+                DrawPathField(GameAssemblyPathLabel, GameAssemblyPathTooltip, ref gameAssemblyPath, false);
                 window.GameAssemblyPath = gameAssemblyPath;
 
                 string destinationPath = window.DestinationPath;
-                DrawPathField("Dependencies Destination", ref destinationPath, false);
+                DrawPathField(
+                    DependenciesDestinationLabel, DependenciesDestinationTooltip, ref destinationPath, false);
                 window.DestinationPath = destinationPath;
 
-                DrawSectionHeading("Asset Import");
+                DrawSectionHeading(AssetImportGroup);
                 DrawSourceAssetField(window);
 
                 string assetImportDestinationPath = window.AssetImportDestinationPath;
-                DrawPathField("Asset Import Destination", ref assetImportDestinationPath, false);
+                DrawPathField(AssetImportDestinationLabel, AssetImportDestinationTooltip,
+                    ref assetImportDestinationPath, false);
                 window.AssetImportDestinationPath = assetImportDestinationPath;
 
-                DrawSectionHeading("Import Options");
+                DrawSectionHeading(ImportOptionsGroup);
                 window.ForceAssetRipperReindex = EditorGUILayout.Toggle(
-                    "Force AssetRipper Re-index", window.ForceAssetRipperReindex);
+                    new GUIContent(ForceReindexLabel, ForceReindexTooltip),
+                    window.ForceAssetRipperReindex);
                 window.FixShaderENotation = EditorGUILayout.Toggle(
-                    "Fix shader E notation", window.FixShaderENotation);
+                    new GUIContent(FixShaderExponentLabel, FixShaderExponentTooltip), window.FixShaderENotation);
                 window.RepairMissingTmpAtlases = EditorGUILayout.Toggle(
-                    "Repair missing TMP atlases", window.RepairMissingTmpAtlases);
-                window.ReportOnly = EditorGUILayout.Toggle("Report only", window.ReportOnly);
-                window.OverwriteExisting = EditorGUILayout.Toggle("Overwrite Existing", window.OverwriteExisting);
+                    new GUIContent(RepairTmpAtlasesLabel, RepairTmpAtlasesTooltip),
+                    window.RepairMissingTmpAtlases);
+                window.ReportOnly = EditorGUILayout.Toggle(
+                    new GUIContent(ReportOnlyLabel, ReportOnlyTooltip), window.ReportOnly);
+                window.OverwriteExisting = EditorGUILayout.Toggle(
+                    new GUIContent(OverwriteExistingLabel, OverwriteExistingTooltip), window.OverwriteExisting);
             }
 
             DrawImportControls(window);
@@ -56,11 +63,8 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 
         private static void DrawIntroduction()
         {
-            EditorGUILayout.LabelField("AssetRipper Reference Asset Importer", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "Copies the selected asset and its recursive dependencies while preserving AssetRipper GUIDs. " +
-                "Exported scripts are remapped to MonoScript types in ThunderKit's imported game DLLs.",
-                MessageType.Info);
+            EditorGUILayout.LabelField(MainTitle, EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(Introduction, MessageType.Info);
         }
 
         private static void DrawSectionHeading(string title)
@@ -76,20 +80,31 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             {
                 Rect progressRect = EditorGUILayout.GetControlRect(false, 22.0f);
                 EditorGUI.ProgressBar(progressRect, window.ProgressValue, window.ImportStatus);
-                if (GUILayout.Button("Cancel Import", GUILayout.Height(28.0f))) window.CancelImport();
+                GUI.Label(progressRect, new GUIContent(
+                    string.Empty, ImportProgressTooltip + " " + ImportStatusTooltip));
+                if (GUILayout.Button(new GUIContent(CancelButtonLabel, CancelButtonTooltip), GUILayout.Height(28.0f)))
+                {
+                    window.CancelImport();
+                }
                 return;
             }
 
             using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(window.SourceAssetPath)))
             {
-                if (GUILayout.Button("Import Asset and Dependencies", GUILayout.Height(32.0f))) window.BeginImport();
+                if (GUILayout.Button(
+                        new GUIContent(ImportButtonLabel, ImportButtonTooltip),
+                        GUILayout.Height(32.0f)))
+                {
+                    window.BeginImport();
+                }
             }
         }
 
         private static void DrawReport(RippedAssetImporterWindow window)
         {
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Import Report", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(
+                new GUIContent(ImportReportGroup, ImportReportTooltip), EditorStyles.boldLabel);
             window.ReportScrollPosition = EditorGUILayout.BeginScrollView(window.ReportScrollPosition);
             EditorGUILayout.TextArea(window.Report, GUILayout.ExpandHeight(true));
             EditorGUILayout.EndScrollView();
@@ -98,23 +113,25 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         private static void DrawSourceAssetField(RippedAssetImporterWindow window)
         {
             EditorGUILayout.BeginHorizontal();
-            window.SourceAssetPath = EditorGUILayout.TextField("Source Asset", window.SourceAssetPath);
-            if (GUILayout.Button("Browse", GUILayout.Width(BrowseButtonWidth)))
+            window.SourceAssetPath = EditorGUILayout.TextField(
+                new GUIContent(SourceAssetPathLabel, SourceAssetPathTooltip), window.SourceAssetPath);
+            if (GUILayout.Button(
+                    new GUIContent(BrowseButtonLabel, SourceAssetPathTooltip), GUILayout.Width(BrowseButtonWidth)))
             {
                 string initialPath = GetFilePickerDirectory(
                     window.SourceAssetPath, window.ExportAssetsPath);
                 string selectedPath = EditorUtility.OpenFilePanel(
-                    "Select AssetRipper asset", initialPath, string.Empty);
+                    SourceAssetDialogTitle, initialPath, string.Empty);
                 if (!string.IsNullOrEmpty(selectedPath)) window.SourceAssetPath = selectedPath;
             }
             EditorGUILayout.EndHorizontal();
         }
 
-        private static void DrawPathField(string label, ref string path, bool allowAbsolutePath)
+        private static void DrawPathField(string label, string tooltip, ref string path, bool allowAbsolutePath)
         {
             EditorGUILayout.BeginHorizontal();
-            path = EditorGUILayout.TextField(label, path);
-            if (GUILayout.Button("Browse", GUILayout.Width(BrowseButtonWidth)))
+            path = EditorGUILayout.TextField(new GUIContent(label, tooltip), path);
+            if (GUILayout.Button(new GUIContent(BrowseButtonLabel, tooltip), GUILayout.Width(BrowseButtonWidth)))
             {
                 string initialPath = FileSystemUtils.GetAbsolutePath(path);
                 string selectedPath = EditorUtility.OpenFolderPanel(label, initialPath, string.Empty);

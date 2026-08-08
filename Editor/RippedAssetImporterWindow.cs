@@ -16,6 +16,7 @@ using Sirenix.OdinInspector.Editor;
 using Object = UnityEngine.Object;
 using static DaftAppleGames.Editor.RippedAssetImporter.FileSystemUtils;
 using static DaftAppleGames.Editor.RippedAssetImporter.AssetRepair;
+using static DaftAppleGames.Editor.RippedAssetImporter.UserInterfaceText;
 
 namespace DaftAppleGames.Editor.RippedAssetImporter
 {
@@ -57,7 +58,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         [HideInInspector, SerializeField] private bool reportOnly = false;
         [HideInInspector, SerializeField] private bool overwriteExisting = true;
         [HideInInspector, SerializeField] private Vector2 reportScrollPosition;
-        [HideInInspector, SerializeField] private string report = "Select an AssetRipper asset to begin.";
+        [HideInInspector, SerializeField] private string report = InitialReport;
 
         private CancellationTokenSource importCancellation;
         private bool isImporting;
@@ -113,11 +114,11 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         /// <summary>
         /// Opens and configures the reference asset importer window.
         /// </summary>
-        [MenuItem("Tools/Import Reference Asset")]
+        [MenuItem(MenuPath)]
         public static void ShowWindow()
         {
             RippedAssetImporterWindow window = GetWindow<RippedAssetImporterWindow>();
-            window.titleContent = new GUIContent("Reference Asset Importer");
+            window.titleContent = new GUIContent(WindowTitle);
             window.minSize = new Vector2(640.0f, 430.0f);
         }
 
