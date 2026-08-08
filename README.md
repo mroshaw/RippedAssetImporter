@@ -6,6 +6,24 @@ Ripped Asset Importer is a Unity Editor tool for importing assets from an AssetR
 
 Open the tool from **Tools > Import Ripped Asset**.
 
+## Installation
+
+Install the package directly from its Git repository using Unity's Package Manager:
+
+1. Ensure Git is installed and available on the system path.
+2. In Unity, open **Window > Package Manager**.
+3. Open the **+** menu and select **Add package from git URL**.
+4. Enter the following URL:
+
+   ```text
+   https://github.com/mroshaw/RippedAssetImporter.git
+   ```
+
+5. Select **Add** and allow Unity to download and compile the package.
+6. Open the tool from **Tools > Import Ripped Asset**.
+
+Unity records the dependency in the project's `Packages/manifest.json`. The Package Manager can then be used to manage the installed package.
+
 Dependencies retain their paths relative to the AssetRipper `Assets` directory. For example:
 
 ```text
@@ -32,7 +50,7 @@ The interface is divided into three working sections:
 
 ## Using the Tool
 
-1. Open **Tools > Import Reference Asset**.
+1. Open **Tools > Import Ripped Asset**.
 2. Set **Export Assets Root** to the `Assets` directory of the AssetRipper export.
 3. Set **Game Assemblies Root** to a project-relative folder containing the imported game DLLs. This configurable path allows the importer to be used with different Unity games and project layouts.
 4. Set **Dependencies Destination** to a project-relative folder beneath `Assets`. Dependencies are copied beneath this folder while retaining their paths relative to the export root.
