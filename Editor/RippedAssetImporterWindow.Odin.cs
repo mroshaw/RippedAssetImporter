@@ -1,4 +1,4 @@
-#if ODIN_INSPECTOR
+#if ODIN_INSPECTOR && !DEBUG_NO_ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 using UnityEngine;
 using static DaftAppleGames.Editor.RippedAssetImporter.UserInterfaceText;

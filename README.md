@@ -22,7 +22,7 @@ The selected asset itself is placed directly in **Asset Import Destination**, us
 
 All configurable window values are serialized and restored by Unity with the editor layout. Paths and options therefore remain available between Unity Editor sessions.
 
-When Odin Inspector is installed and `ODIN_INSPECTOR` is defined, the tool uses a dedicated `OdinEditorWindow` interface with grouped properties, native path drawers, validation, tooltips, state-aware buttons, progress, status, and a read-only report. It falls back to a complete standard Unity Editor interface when Odin is unavailable. Both interfaces use the same centrally defined labels, descriptions, and tooltips.
+When Odin Inspector is installed and `ODIN_INSPECTOR` is defined, the tool uses a dedicated `OdinEditorWindow` interface with grouped properties, native path drawers, validation, tooltips, state-aware buttons, progress, status, and a read-only report. It falls back to a complete standard Unity Editor interface when Odin is unavailable. Define `DEBUG_NO_ODIN_INSPECTOR` to force this fallback while Odin remains installed, which is useful for testing the standard interface. Both interfaces use the same centrally defined labels, descriptions, and tooltips.
 
 The interface is divided into three working sections:
 

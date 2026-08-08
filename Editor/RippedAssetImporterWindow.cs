@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
-#if ODIN_INSPECTOR
+#if ODIN_INSPECTOR && !DEBUG_NO_ODIN_INSPECTOR
 using Sirenix.OdinInspector.Editor;
 #endif
 using Object = UnityEngine.Object;
@@ -25,7 +25,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
     /// DLL types.
     /// </summary>
     public partial class RippedAssetImporterWindow :
-#if ODIN_INSPECTOR
+#if ODIN_INSPECTOR && !DEBUG_NO_ODIN_INSPECTOR
         OdinEditorWindow
 #else
         EditorWindow
@@ -112,7 +112,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         }
 
         /// <summary>
-        /// Opens and configures the Ripped Asset Importer window.
+        /// Opens and configures the reference asset importer window.
         /// </summary>
         [MenuItem(MenuPath)]
         public static void ShowWindow()
@@ -122,7 +122,7 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
             window.minSize = new Vector2(640.0f, 430.0f);
         }
 
-#if !ODIN_INSPECTOR
+#if !ODIN_INSPECTOR || DEBUG_NO_ODIN_INSPECTOR
         private void OnGUI()
         {
             UserInterfaceUtils.Draw(this);
