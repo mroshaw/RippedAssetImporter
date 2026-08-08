@@ -1,0 +1,18 @@
+{
+  "name": "com.daftapplegames.rippedassetimporter",
+  "version": "1.0.0",
+  "displayName": "Ripped Asset Importer",
+  "description": "Unity editor tool to import assets and dependencies from ripped game assets",
+  "unity": "2019.4",
+  "documentationUrl": "https://raw.githubusercontent.com/mroshaw/rippedassetimporter/refs/heads/main/README.md",
+  "changelogUrl": "https://raw.githubusercontent.com/mroshaw/rippedassetimporter/refs/heads/main/CHANGELOG.md",
+  "licensesUrl": "https://raw.githubusercontent.com/mroshaw/rippedassetimporter/refs/heads/main/LICENSE.md",
+  "keywords": [
+    "asset ripper"
+  ],
+  "author": {
+    "name": "Daft Apple Games",
+    "email": "oli@mroshaw.co.uk",
+    "url": "https://github.com/mroshaw"
+  }
+}
