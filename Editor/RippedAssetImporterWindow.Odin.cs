@@ -1,6 +1,8 @@
 #if ODIN_INSPECTOR && !DEBUG_NO_ODIN_INSPECTOR
 using System.IO;
 using Sirenix.OdinInspector;
+using Sirenix.Utilities.Editor;
+using UnityEditor;
 using UnityEngine;
 using static DaftAppleGames.Editor.RippedAssetImporter.UserInterfaceText;
 
@@ -8,9 +10,15 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
 {
     public partial class RippedAssetImporterWindow
     {
-        [Title(MainTitle, MainSubtitle)]
+        [OnInspectorGUI]
+        [PropertyOrder(-100)]
+        private void DrawOdinHeader()
+        {
+            SirenixEditorGUI.Title(MainTitle, MainSubtitle, TextAlignment.Left, true);
+            SirenixEditorGUI.InfoMessageBox(Introduction);
+        }
+
         [TitleGroup(ReferencePathsGroup, ReferencePathsDescription)]
-        [InfoBox(Introduction)]
         [FolderPath(AbsolutePath = true)]
         [ValidateInput(nameof(IsExistingFolderPath), FolderPathDoesNotExistMessage)]
         [LabelText(ExportAssetsPathLabel)]
@@ -182,13 +190,23 @@ namespace DaftAppleGames.Editor.RippedAssetImporter
         private string OdinImportStatus => importStatus;
 
         [TitleGroup(ImportReportGroup)]
-        [MultiLineProperty(12)]
-        [ReadOnly]
-        [HideLabel]
-        [PropertyTooltip(ImportReportTooltip)]
-        [ShowInInspector]
+        [OnInspectorGUI]
         [PropertyOrder(40)]
-        private string OdinReport => report;
+        private void DrawOdinReport()
+        {
+            string reportText = report ?? string.Empty;
+            float reportWidth = Mathf.Max(100.0f, EditorGUIUtility.currentViewWidth - 40.0f);
+            float reportHeight = Mathf.Max(
+                160.0f, EditorStyles.textArea.CalcHeight(new GUIContent(reportText), reportWidth));
+
+            reportScrollPosition = EditorGUILayout.BeginScrollView(
+                reportScrollPosition, GUILayout.MinHeight(160.0f), GUILayout.ExpandHeight(true));
+            EditorGUILayout.SelectableLabel(
+                reportText, EditorStyles.textArea, GUILayout.Height(reportHeight));
+            Rect reportRect = GUILayoutUtility.GetLastRect();
+            GUI.Label(reportRect, new GUIContent(string.Empty, ImportReportTooltip));
+            EditorGUILayout.EndScrollView();
+        }
 
         private string OdinSourceAssetPickerRoot => FileSystemUtils.GetAbsolutePath(exportAssetsPath);
 
