@@ -6,8 +6,6 @@ Ripped Asset Importer is a Unity Editor tool for importing assets from an AssetR
 
 The result is a usable asset/prefab, with its script references in place, that can be modified and tested within the Unity Editor. Prefabs created from the imported asset can be exported and used within a mod via a Thunderkit asset bundle.
 
-Open the tool from **Tools > Import Ripped Asset**.
-
 The tool was developed and tested using Unity 2019.4, but should work with later versions too.
 
 The tool depends on Thunderkit and a complete game files import via the Thunderkit UI.
