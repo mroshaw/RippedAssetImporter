@@ -43,6 +43,8 @@ Install the package directly from its Git repository using Unity's Package Manag
 12. Click **Import Asset and Dependencies**.
 13. Unity refreshes the Asset Database and highlights the imported selected asset when the operation completes.
 
+The initial AssetRipper file index cache process can take several minutes. You can, at your own risk, add the project export folder as a Windows Defender exception to improve performance considerably. The caching process only needs to run once, unless the ripped files change - for example, if you redo the export with an updated version of the game.
+
 ## Developer notes
 
 Dependencies retain their paths relative to the AssetRipper `Assets` directory. For example:
