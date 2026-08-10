@@ -8,7 +8,11 @@ The result is a usable asset/prefab, with its script references in place, that c
 
 The tool was developed and tested using Unity 2019.4, but should work with later versions too.
 
-The tool depends on Thunderkit and a complete game files import via the Thunderkit UI.
+## Dependencies
+
+[ThunderKit](https://github.com/PassivePicasso/ThunderKit) - you'll need a complete game files import via the ThunderKit UI.
+
+[Asset Ripper] (https://github.com/assetripper/assetripper) - you'll need a full project export of the game you're modding.
 
 ## Installation
 
@@ -28,7 +32,7 @@ Install the package directly from its Git repository using Unity's Package Manag
 
 1. Open **Tools > Import Ripped Asset**.
 2. Set **Export Assets Root** to the `Assets` directory of the AssetRipper export folder.
-3. Set **Game Assemblies Root** to the folder containing the game DLLs that Thunderkit imported.
+3. Set **Game Assemblies Root** to the folder containing the game DLLs that ThunderKit imported. Usually `\Packages\<GameName>`.
 4. Set **Dependencies Destination** to a folder within `Assets`. Dependencies are copied beneath this folder while retaining their paths relative to the AssetRipper export root.
 5. Use **Source Asset** to select the asset to import. Select the asset itself, not its `.meta` file.
 6. Set **Asset Import Destination** to the project-relative folder beneath `Assets` where the selected asset should be placed. The asset is written directly into this folder using its original filename.
