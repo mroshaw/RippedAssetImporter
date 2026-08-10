@@ -10,9 +10,8 @@ The tool was developed and tested using Unity 2019.4, but should work with later
 
 ## Dependencies
 
-[ThunderKit](https://github.com/PassivePicasso/ThunderKit) - you'll need a complete game files import via the ThunderKit UI.
-
-[Asset Ripper] (https://github.com/assetripper/assetripper) - you'll need a full project export of the game you're modding.
+* [ThunderKit](https://github.com/PassivePicasso/ThunderKit) - you'll need a complete game files import via the ThunderKit UI.
+* [Asset Ripper](https://github.com/assetripper/assetripper) - you'll need a full project export of the game you're modding.
 
 ## Installation
 
